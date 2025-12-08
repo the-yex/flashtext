@@ -39,24 +39,21 @@ import (
 // 15
 // =========
 func TestBasicMatching(t *testing.T) {
-	kp := NewKeywordProcessor(false)
-	kp.AddKeywordsFromList([]string{"he", "is", "she", "hers", "his", "share"}).Build()
+	kp := NewKeywordProcessor() // case insensitive
 
-	matches := kp.ExtractKeywords("ahishersheshare")
-	//if len(matches) != 6 {
-	//	t.Errorf("期望匹配6个关键词, 实际匹配 %d 个", len(matches))
-	//}
-	for _, match := range matches {
-		fmt.Println("Match: ", match.MatchString())
-		fmt.Println(match.start)
-		fmt.Println(match.end)
-		fmt.Println("=========")
-	}
+	// 2. 添加关键词
+	kp.AddKeyWord("Big Data")
+	kp.AddKeyWord("Python")
+	kp.Build()
+	// 3. 匹配
+	text := "I love Big Data and Python."
+	matches := kp.ExtractKeywords(text)
+	fmt.Println(matches)
 }
 
 // 中文测试
 func TestChineseMatching(t *testing.T) {
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeyWord("毛泽东").Build()
 
 	text := "ahisHershare毛泽东dsadsa"
@@ -79,7 +76,7 @@ func TestChineseMatching(t *testing.T) {
 
 // 大小写不敏感测试
 func TestCaseInsensitive(t *testing.T) {
-	kp := NewKeywordProcessor(false) // 不区分大小写
+	kp := NewKeywordProcessor() // 不区分大小写
 	kp.AddKeyWord("apple").Build()
 
 	tests := []struct {
@@ -104,7 +101,7 @@ func TestCaseInsensitive(t *testing.T) {
 
 // 大小写敏感测试
 func TestCaseSensitive(t *testing.T) {
-	kp := NewKeywordProcessor(true) // 区分大小写
+	kp := NewKeywordProcessor(WithCaseSensitive()) // 区分大小写
 	kp.AddKeyWord("Apple").Build()
 
 	tests := []struct {
@@ -144,7 +141,7 @@ func TestEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			kp := NewKeywordProcessor(false)
+			kp := NewKeywordProcessor()
 			kp.AddKeywordsFromList(tt.keywords).Build()
 			matches := kp.ExtractKeywords(tt.text)
 			if len(matches) != tt.expected {
@@ -156,7 +153,7 @@ func TestEdgeCases(t *testing.T) {
 
 // Bytes方法测试
 func TestExtractFromBytes(t *testing.T) {
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList([]string{"hello", "world"}).Build()
 
 	text := []byte("hello world hello")

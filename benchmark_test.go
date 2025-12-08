@@ -11,7 +11,7 @@ func BenchmarkExtractKeywords(b *testing.B) {
 	}
 	text := "日本AV演员兼电视、电影演员。无名氏AV女优是xx出道, 日本AV女优们最精彩的表演是AV演员色情表演"
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -27,7 +27,7 @@ func BenchmarkExtractFromBytes(b *testing.B) {
 	}
 	text := []byte("日本AV演员兼电视、电影演员。无名氏AV女优是xx出道, 日本AV女优们最精彩的表演是AV演员色情表演")
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -47,7 +47,7 @@ func BenchmarkSmallKeywordSet(b *testing.B) {
 	}
 	text := "This is a test text with hello world and some golang code for user data processing."
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -67,7 +67,7 @@ func BenchmarkMediumKeywordSet(b *testing.B) {
 
 	text := "This is a test text with aword00 and bword11 and some cword22 data for processing."
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -87,7 +87,7 @@ func BenchmarkLargeKeywordSet(b *testing.B) {
 
 	text := "This is a test text with aword000 and bword111 and some cword222 data for processing."
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -104,7 +104,7 @@ func BenchmarkShortText(b *testing.B) {
 	keywords := []string{"test", "golang", "performance"}
 	text := "This is a short test text with golang code."
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -124,7 +124,7 @@ func BenchmarkMediumText(b *testing.B) {
 		This helps us understand how the algorithm performs with realistic text lengths.
 		The text should be long enough to demonstrate performance characteristics.`
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -145,7 +145,7 @@ func BenchmarkLongText(b *testing.B) {
 		text += baseText
 	}
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -161,7 +161,7 @@ func BenchmarkCaseInsensitive(b *testing.B) {
 	keywords := []string{"Go", "Golang", "Python", "Java", "JavaScript"}
 	text := "I love programming in go, golang, PYTHON, java, and javascript."
 
-	kp := NewKeywordProcessor(false) // 不区分大小写
+	kp := NewKeywordProcessor() // 不区分大小写
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -175,7 +175,7 @@ func BenchmarkCaseSensitive(b *testing.B) {
 	keywords := []string{"Go", "Golang", "Python", "Java", "JavaScript"}
 	text := "I love programming in Go, Golang, Python, Java, and JavaScript."
 
-	kp := NewKeywordProcessor(true) // 区分大小写
+	kp := NewKeywordProcessor(WithCaseSensitive()) // 区分大小写
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -190,7 +190,7 @@ func BenchmarkMixedLanguage(b *testing.B) {
 	keywords := []string{"golang", "性能", "测试", "performance", "代码", "code"}
 	text := "这是一个golang性能测试的例子。This is a performance test example with 代码 and code mixed together."
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 
 	b.ReportAllocs()
@@ -210,7 +210,7 @@ func BenchmarkBuild(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		kp := NewKeywordProcessor(false)
+		kp := NewKeywordProcessor()
 		kp.AddKeywordsFromList(keywords).Build()
 	}
 }
@@ -224,7 +224,7 @@ func BenchmarkAddKeywords(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		kp := NewKeywordProcessor(false)
+		kp := NewKeywordProcessor()
 		for _, word := range keywords {
 			kp.AddKeyWord(word)
 		}

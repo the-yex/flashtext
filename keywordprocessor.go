@@ -18,15 +18,28 @@ type WalkFn func(start, end int) bool
 type KeywordProcessor struct {
 	root          *Node
 	caseSensitive bool // 匹配是否区分大小写
+	matchDensity  float64
+}
+type Option func(*KeywordProcessor)
+
+// 是否区分大小写，默认不区分大小写
+func WithCaseSensitive() Option {
+	return func(processor *KeywordProcessor) {
+		processor.caseSensitive = true
+	}
 }
 
 // NewKeywordProcessor creates a new processor instance.
 // caseSensitive: if true, matches are case-sensitive.
-func NewKeywordProcessor(caseSensitive bool) *KeywordProcessor {
-	return &KeywordProcessor{
+func NewKeywordProcessor(opts ...Option) *KeywordProcessor {
+	processor := &KeywordProcessor{
 		root:          newNode(),
-		caseSensitive: caseSensitive,
+		caseSensitive: false,
 	}
+	for _, opt := range opts {
+		opt(processor)
+	}
+	return processor
 }
 
 func (kp *KeywordProcessor) setItem(keyword string) {
@@ -134,7 +147,7 @@ func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 	if len(runes) == 0 {
 		return nil
 	}
-	matches := make([]Match, 0, len(runes)/4)
+	matches := make([]Match, 0, len(runes)/3)
 	byteOffsets := make([]int, len(runes)+1)
 	for i, r := range runes {
 		byteOffsets[i+1] = byteOffsets[i] + utf8.RuneLen(r)

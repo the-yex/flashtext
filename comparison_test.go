@@ -59,7 +59,7 @@ func BenchmarkComparison_ThisLibrary(b *testing.B) {
 		words = words[:10000]
 	}
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(words).Build()
 
 	b.ReportAllocs()
@@ -147,7 +147,7 @@ func BenchmarkSmallScale_ThisLibrary(b *testing.B) {
 		words = words[:100]
 	}
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(words).Build()
 
 	b.ReportAllocs()
@@ -231,7 +231,7 @@ func BenchmarkMediumScale_ThisLibrary(b *testing.B) {
 		words = words[:1000]
 	}
 
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(words).Build()
 
 	b.ReportAllocs()

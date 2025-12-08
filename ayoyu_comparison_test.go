@@ -14,7 +14,7 @@ func TestAyoyuOverlapMatching(t *testing.T) {
 	text := "hershey"
 
 	// 本库测试
-	kp := NewKeywordProcessor(false)
+	kp := NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 	ourMatches := kp.ExtractKeywords(text)
 
