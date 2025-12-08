@@ -13,7 +13,7 @@ func main() {
 	// Demo: Overlapping matches and batch processing
 
 	fmt.Println("=== 1. Overlapping Matches / 重叠匹配 ===")
-	kp := flashtext.NewKeywordProcessor(false)
+	kp := flashtext.NewKeywordProcessor()
 	
 	// 添加一组包含包含关系的关键词
 	keywords := []string{"sys", "system", "tem", "operating system"}
@@ -39,7 +39,7 @@ func main() {
 
 	fileData, _ := ioutil.ReadFile(filename)
 	
-	kp2 := flashtext.NewKeywordProcessor(false)
+	kp2 := flashtext.NewKeywordProcessor()
 	kp2.AddKeywordsFromList([]string{"hello", "file", "test"}).Build()
 	
 	// 直接处理 []byte，避免转换string的开销

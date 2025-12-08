@@ -1,6 +1,7 @@
 package flashtext
 
 import (
+	"context"
 	"unicode"
 	"unicode/utf8"
 )
@@ -16,8 +17,10 @@ type WalkFn func(start, end int) bool
 // KeywordProcessor controls the keyword matching process.
 // It holds the AC automaton trie and configuration.
 type KeywordProcessor struct {
+	cancel        context.CancelFunc
 	root          *Node
-	caseSensitive bool // 匹配是否区分大小写
+	stats         *stats // 异步统计模块，根据词库动态调整 density ，跑的越久性能越好
+	caseSensitive bool   // 匹配是否区分大小写
 	matchDensity  float64
 }
 type Option func(*KeywordProcessor)
@@ -32,9 +35,11 @@ func WithCaseSensitive() Option {
 // NewKeywordProcessor creates a new processor instance.
 // caseSensitive: if true, matches are case-sensitive.
 func NewKeywordProcessor(opts ...Option) *KeywordProcessor {
+	ctx := context.Background()
 	processor := &KeywordProcessor{
 		root:          newNode(),
 		caseSensitive: false,
+		stats:         newStats(ctx, defaultAlpha, defaultBuffer),
 	}
 	for _, opt := range opts {
 		opt(processor)
@@ -147,7 +152,16 @@ func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 	if len(runes) == 0 {
 		return nil
 	}
-	matches := make([]Match, 0, len(runes)/3)
+	density := kp.stats.getDensity()
+	capEstimate := int(float64(len(runes)) * density)
+	if capEstimate < 16 {
+		capEstimate = 16
+	}
+	if capEstimate > 4096 {
+		capEstimate = 4096
+	}
+	//fmt.Println(capEstimate)
+	matches := make([]Match, 0, capEstimate)
 	byteOffsets := make([]int, len(runes)+1)
 	for i, r := range runes {
 		byteOffsets[i+1] = byteOffsets[i] + utf8.RuneLen(r)
@@ -162,6 +176,7 @@ func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 		})
 		return true
 	})
+	kp.stats.add(len(matches), len(runes))
 	return matches
 }
 
@@ -170,4 +185,10 @@ func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 func (kp *KeywordProcessor) ExtractKeywordsFromBytes(sentence []byte) []Match {
 	// 优化: 预分配容量 + 统一使用 walk
 	return kp.ExtractKeywords(string(sentence))
+}
+
+func (kp *KeywordProcessor) Close() {
+	if kp.stats != nil {
+		kp.stats.close()
+	}
 }

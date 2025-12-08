@@ -40,7 +40,7 @@ import (
 // =========
 func TestBasicMatching(t *testing.T) {
 	kp := NewKeywordProcessor() // case insensitive
-
+	defer kp.Close()
 	// 2. 添加关键词
 	kp.AddKeyWord("Big Data")
 	kp.AddKeyWord("Python")
@@ -54,6 +54,7 @@ func TestBasicMatching(t *testing.T) {
 // 中文测试
 func TestChineseMatching(t *testing.T) {
 	kp := NewKeywordProcessor()
+	defer kp.Close()
 	kp.AddKeyWord("毛泽东").Build()
 
 	text := "ahisHershare毛泽东dsadsa"
@@ -77,6 +78,7 @@ func TestChineseMatching(t *testing.T) {
 // 大小写不敏感测试
 func TestCaseInsensitive(t *testing.T) {
 	kp := NewKeywordProcessor() // 不区分大小写
+	defer kp.Close()
 	kp.AddKeyWord("apple").Build()
 
 	tests := []struct {
@@ -102,6 +104,7 @@ func TestCaseInsensitive(t *testing.T) {
 // 大小写敏感测试
 func TestCaseSensitive(t *testing.T) {
 	kp := NewKeywordProcessor(WithCaseSensitive()) // 区分大小写
+	defer kp.Close()
 	kp.AddKeyWord("Apple").Build()
 
 	tests := []struct {
@@ -154,6 +157,7 @@ func TestEdgeCases(t *testing.T) {
 // Bytes方法测试
 func TestExtractFromBytes(t *testing.T) {
 	kp := NewKeywordProcessor()
+	defer kp.Close()
 	kp.AddKeywordsFromList([]string{"hello", "world"}).Build()
 
 	text := []byte("hello world hello")

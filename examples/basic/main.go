@@ -9,7 +9,7 @@ import (
 func main() {
 	// 1. 初始化处理器 (true表示区分大小写)
 	// Initialize processor (true for case sensitive)
-	kp := flashtext.NewKeywordProcessor(true)
+	kp := flashtext.NewKeywordProcessor(flashtext.WithCaseSensitive())
 
 	// 2. 添加关键词
 	// Add keywords
