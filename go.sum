@@ -1,8 +1,2 @@
-github.com/BobuSumisu/aho-corasick v1.0.3 h1:uuf+JHwU9CHP2Vx+wAy6jcksJThhJS9ehR8a+4nPE9g=
-github.com/BobuSumisu/aho-corasick v1.0.3/go.mod h1:hm4jLcvZKI2vRF2WDU1N4p/jpWtpOzp3nLmi9AzX/XE=
-github.com/ayoyu/flashtext v0.0.0-20230402155745-473ab1638eef h1:ScxbZyeAFECyNp/uvyaTwoIkbKEhbBEWQ31xHVdKVOI=
-github.com/ayoyu/flashtext v0.0.0-20230402155745-473ab1638eef/go.mod h1:B3/xyn0DHyHExUZTzKRKHC9RsMguaVjB3mECMGU6lcg=
-github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
-github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
-github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+github.com/ayoyu/flashtext v0.0.0-20240406144751-3b6ef90330b0 h1:OLrfuEiZ//AjwVbHnXv+qcj8o8ntR+xxOGLEBAl+0h8=
+github.com/ayoyu/flashtext v0.0.0-20240406144751-3b6ef90330b0/go.mod h1:B3/xyn0DHyHExUZTzKRKHC9RsMguaVjB3mECMGU6lcg=

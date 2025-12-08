@@ -2,84 +2,130 @@ package flashtext
 
 import (
 	"fmt"
-	"github.com/ayoyu/flashtext"
 	"testing"
 )
 
-var (
-	keys = []string{
-		"he", "she", "hers", "his", "share", "毛泽东",
-	}
-	key = "ahishershare毛泽东dsadsadsagfasdasd12332154"
-)
+// 基础功能测试
+func TestBasicMatching(t *testing.T) {
+	kp := NewKeywordProcessor(false)
+	kp.AddKeywordsFromList([]string{"he", "is", "she", "hers", "his", "share"}).Build()
 
-func TestKeywordProcessor_AddKeywordsFromList(t *testing.T) {
-	trie := NewKeywordProcessor(false)
-
-	trie.AddKeywordsFromList(keys).Build()
-	matches := trie.ExtractKeywords(key)
-	for _, match := range matches {
-		fmt.Println(match.MatchString())
-		fmt.Println("Start:", match.Start())
-		fmt.Println("End:", match.End())
-		fmt.Println("---")
+	matches := kp.ExtractKeywords("ahishershare")
+	if len(matches) != 6 {
+		t.Errorf("期望匹配6个关键词, 实际匹配 %d 个", len(matches))
 	}
-	//fmt.Println(key)
-	fmt.Println(key[12:21])
-	//fmt.Println(utf8.DecodeRuneInString("h"))
+
 }
 
-/**
-his
-Start: 1
-End: 4
----
-he
-Start: 4
-End: 6
----
-she
-Start: 3
-End: 6
----
-hers
-Start: 4
-End: 8
----
-share
-Start: 7
-End: 12
----
-毛泽东
-Start: 12
-End: 21
----
-*/
+// 中文测试
+func TestChineseMatching(t *testing.T) {
+	kp := NewKeywordProcessor(false)
+	kp.AddKeyWord("毛泽东").Build()
 
-func TestKeywordProcessor_AddKeywordsFromList_Bytes(t *testing.T) {
-	trie := NewKeywordProcessor(false)
+	text := "ahisHershare毛泽东dsadsa"
+	matches := kp.ExtractKeywords(text)
+	fmt.Println(matches)
+	if len(matches) != 1 {
+		t.Fatalf("期望匹配1个关键词, 实际 %d 个", len(matches))
+	}
 
-	trie.AddKeywordsFromList(keys).Build()
-	matches := trie.ExtractKeywordsFromBytes([]byte(key))
-	for _, match := range matches {
-		fmt.Println(match.MatchString())
-		fmt.Println("Start:", match.Start())
-		fmt.Println("End:", match.End())
-		fmt.Println("---")
+	match := matches[0]
+	if match.MatchString() != "毛泽东" {
+		t.Errorf("期望匹配 '毛泽东', 实际 '%s'", match.MatchString())
+	}
+
+	// 验证字节位置
+	if text[match.Start():match.End()] != "毛泽东" {
+		t.Errorf("字节位置不正确")
 	}
 }
 
-func TestKeywordProcessor_Flash(t *testing.T) {
-	var flash = flashtext.NewFlashKeywords(false)
+// 大小写不敏感测试
+func TestCaseInsensitive(t *testing.T) {
+	kp := NewKeywordProcessor(false) // 不区分大小写
+	kp.AddKeyWord("apple").Build()
 
-	for _, word := range keys {
-		flash.Add(word)
+	tests := []struct {
+		text     string
+		expected int
+	}{
+		{"I have an apple", 1},
+		{"I have an Apple", 1},
+		{"I have an APPLE", 1},
+		{"I have an aPpLe", 1},
+		{"no fruit here", 0},
 	}
-	matches := flash.Search(key)
-	for _, match := range matches {
-		fmt.Println("match:", match.Key)
-		fmt.Println("Start:", match.Start)
-		fmt.Println("End:", match.End)
-		fmt.Println("---")
+
+	for _, tt := range tests {
+		matches := kp.ExtractKeywords(tt.text)
+		if len(matches) != tt.expected {
+			t.Errorf("文本 '%s': 期望 %d 个匹配, 实际 %d 个",
+				tt.text, tt.expected, len(matches))
+		}
+	}
+}
+
+// 大小写敏感测试
+func TestCaseSensitive(t *testing.T) {
+	kp := NewKeywordProcessor(true) // 区分大小写
+	kp.AddKeyWord("Apple").Build()
+
+	tests := []struct {
+		text     string
+		expected int
+	}{
+		{"I have an Apple", 1},
+		{"I have an apple", 0}, // 小写不匹配
+		{"I have an APPLE", 0}, // 大写不匹配
+	}
+
+	for _, tt := range tests {
+		matches := kp.ExtractKeywords(tt.text)
+		if len(matches) != tt.expected {
+			t.Errorf("文本 '%s': 期望 %d 个匹配, 实际 %d 个",
+				tt.text, tt.expected, len(matches))
+		}
+	}
+}
+
+// 边缘情况测试
+func TestEdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		keywords []string
+		text     string
+		expected int
+	}{
+		{"空文本", []string{"test"}, "", 0},
+		{"空关键词", []string{}, "test text", 0},
+		{"空关键词字符串", []string{""}, "test", 0},
+		{"完全匹配", []string{"hello"}, "hello", 1},
+		{"不匹配", []string{"hello"}, "world", 0},
+		{"重叠匹配", []string{"he", "she", "hers"}, "hershey", 4}, // he, she, hers, he
+		{"单字符", []string{"a"}, "a b c a", 2},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kp := NewKeywordProcessor(false)
+			kp.AddKeywordsFromList(tt.keywords).Build()
+			matches := kp.ExtractKeywords(tt.text)
+			if len(matches) != tt.expected {
+				t.Errorf("期望 %d 个匹配, 实际 %d 个", tt.expected, len(matches))
+			}
+		})
+	}
+}
+
+// Bytes方法测试
+func TestExtractFromBytes(t *testing.T) {
+	kp := NewKeywordProcessor(false)
+	kp.AddKeywordsFromList([]string{"hello", "world"}).Build()
+
+	text := []byte("hello world hello")
+	matches := kp.ExtractKeywordsFromBytes(text)
+
+	if len(matches) != 3 {
+		t.Errorf("期望3个匹配, 实际 %d 个", len(matches))
 	}
 }

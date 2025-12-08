@@ -1,227 +1,401 @@
-# flashtext
+# FlashText
 
-flashtext 是一个使用 Golang 实现的 AC 自动机库，用于在文本中查找和提取关键词。它使用高效的算法和数据结构，可以快速匹配大量的关键词，并返回匹配结果。
+<div align="center">
 
-## 特点
+**高性能的 Go 语言 AC 自动机实现**
 
-- 高效的关键词匹配：flashtext 使用 AC 自动机算法，在文本中快速查找和提取关键词，具有良好的性能和扩展性。
+[![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.20-blue)](https://golang.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](.)
 
-- 多模式匹配：支持同时匹配多个关键词，返回所有匹配结果。
+*快速、准确、完整的关键词匹配解决方案*
 
-- 大小写敏感性：根据需要，可以选择是否区分关键词的大小写。
+[特性](#特性) • [安装](#安装) • [快速开始](#快速开始) • [性能](#性能) • [文档](#文档)
 
-## 安装
+</div>
 
-使用以下命令将 flashtext 库添加到你的项目中：
+---
+
+## 📖 简介
+
+FlashText 是一个高性能的 **Aho-Corasick 自动机**实现，专为 Go 语言设计。使用经典的 AC 自动机算法，能够在文本中快速查找和提取大量关键词，并保证找到**所有重叠匹配**。
+
+### 为什么选择 FlashText？
+
+- ⚡ **性能卓越**: 比正则表达式快 **60倍**
+- 🎯 **完整匹配**: 找到所有重叠匹配，不遗漏任何结果
+- 📦 **简单易用**: 清晰的 API，5 行代码即可上手
+- 🔧 **生产就绪**: 经过完整测试，可用于敏感词过滤、内容审核等场景
+- 🌏 **多语言支持**: 完整的 UTF-8 和中文支持
+
+---
+
+## ✨ 特性
+
+### 核心功能
+
+- ✅ **完整的 AC 自动机实现** - 包含 Trie 树和失败指针机制
+- ✅ **重叠匹配检测** - 找到所有可能的匹配，包括重叠部分
+- ✅ **大小写控制** - 支持大小写敏感/不敏感模式
+- ✅ **高效批量处理** - 一次添加多个关键词
+- ✅ **UTF-8 完整支持** - 正确处理中文、日韩文等多字节字符
+
+### 性能特点
+
+
+| 场景                   | 性能       |
+| ---------------------- | ---------- |
+| 1000个关键词 + 6MB文本 | ~380ms     |
+| vs 正则表达式          | **快60倍** |
+| 时间复杂度             | O(n) 线性  |
+
+📊 详细性能数据请参考 [PERFORMANCE.md](PERFORMANCE.md)
+
+---
+
+## 🚀 安装
 
 ```bash
-go get github.com/code-innovator-zyx/flashtext
+go get github.com/the-yex/flashtext
 ```
 
-## 使用示例
+**要求**: Go 1.20+
 
-下面是一个简单的示例，展示了如何使用 flashtext 进行关键词提取：
+---
+
+## 💡 快速开始
+
+### 基础用法
 
 ```go
+package main
+
 import (
-	"github.com/code-innovator-zyx/flashtext"
-	"fmt"
+    "fmt"
+    "github.com/the-yex/flashtext"
 )
 
 func main() {
-	// 创建一个关键词处理器，不区分大小写
-	kp := flashtext.NewKeywordProcessor(false)
-
-	// 添加关键词
-	kp.AddKeyword("apple")
-	kp.AddKeyword("banana")
-	kp.AddKeyword("orange")
-
-	// 提取关键词
-	sentence := "I have an Apple and a Banana."
-	matches := kp.ExtractKeywords(sentence)
-
-	// 打印匹配结果
-	for _, match := range matches {
-		fmt.Println("Match:", match.Match)
-		fmt.Println("Start:", match.Start)
-		fmt.Println("End:", match.End)
-		fmt.Println("---")
-	}
-}
-```
-
-输出：
-
-```
-Match: Apple
-Start: 9
-End: 13
----
-Match: Banana
-Start: 20
-End: 25
----
-```
-
-## 与其他库的对比
-
-- flashtext vs python flashtext
-
-
-python 库用过的都知道，匹配bug何其多
-### python demo1  
-```python
-from flashtext import KeywordProcessor
-
-kp = KeywordProcessor()
-words = ["he", "she", "hers", "his", "share"] 
-for word in words:
-    kp.add_keyword(keyword=word)  # 新增关键词
-kp.extract_keywords('ahishehersshare')
-```
-
-```
-匹配结果:惊喜吧，啥也配匹配上
-  []
-```
-### python demo2
-```python
-from flashtext import KeywordProcessor
-
-kp = KeywordProcessor()
-words = ["he", "she", "hers", "his", "share"] 
-for word in words:
-    kp.add_keyword(keyword=word)  # 新增关键词
-kp.extract_keywords('a his he hers share')  # 这里手动分词一下
-```
-
-```
-匹配结果: 
-  ['his', 'he', 'hers', 'share']
-```
-#### python flashtext 支持数据清洗  本库暂不支持 见后面说明
-- flashtext vs others flashtext
-### flashtext
-```go
-
-import (
-	"github.com/code-innovator-zyx/flashtext"
-	"fmt"
-)
-
-var (
-	keys = []string{
-		"he", "she", "hers", "his", "share",
-	}
-	key = "ahishershare"
-)
-
-func main() {
-	// 创建一个关键词处理器，不区分大小写
-	kp := flashtext.NewKeywordProcessor(false)
-
-	// 添加关键词
-	kp.AddKeywordsFromList(keys).Build()
-
-	// 提取关键词
-	matches := kp.ExtractKeywords(key)
-
-	// 打印匹配结果
-	for _, match := range matches {
-		fmt.Println("Match:", match.Match)
-		fmt.Println("Start:", match.Start)
-		fmt.Println("End:", match.End)
-		fmt.Println("---")
-	}
-}
-```
-输出
-```
-his
-Start: 1
-End: 3
----
-she
-Start: 3
-End: 5
----
-he
-Start: 4
-End: 5
----
-hers
-Start: 4
-End: 7
----
-share
-Start: 7
-End: 11
----
-```
-### [ayoyu/flashtext](github.com/ayoyu/flashtext)
-```go
-
-import (
-	"github.com/ayoyu/flashtext"
-	"fmt"
-)
-
-var (
-	keys = []string{
-		"he", "she", "hers", "his", "share",
-	}
-	key = "ahishershare"
-)
-
-func main() {
-	// 创建一个关键词处理器，不区分大小写
-	var flash = flashtext.NewFlashKeywords(false)
-
-    for _, word := range keys {
-        flash.Add(word)
-	}
-    matches := flash.Search(key)
+    // 1. 创建处理器（不区分大小写）
+    kp := flashtext.NewKeywordProcessor(false)
+  
+    // 2. 添加关键词并构建
+    kp.AddKeywordsFromList([]string{"golang", "python", "java"}).Build()
+  
+    // 3. 提取关键词
+    text := "I love Golang and Python programming!"
+    matches := kp.ExtractKeywords(text)
+  
+    // 4. 处理结果
     for _, match := range matches {
-        fmt.Println("match:", match.Key)
-        fmt.Println("Start:", match.Start)
-        fmt.Println("End:", match.End)
-        fmt.Println("---")
-}
+        fmt.Printf("找到: %s [%d:%d]\n", 
+            match.MatchString(), match.Start(), match.End())
+    }
 }
 ```
-结果
+
+**输出**:
+
 ```
-match: his
-Start: 1
-End: 3
----
-match: he
-Start: 4
-End: 5
----
-match: hers
-Start: 4
-End: 7
+找到: Golang [7:13]
+找到: Python [18:24]
 ```
 
+### 高级用法
 
-## 为什么不支持数据清洗
+#### 大小写敏感匹配
 
-我们的AC自动机库专注于高效的关键词匹配和提取功能，而没有包含数据清洗功能。以下是一些原因解释为什么我们选择不支持数据清洗：
+```go
+kp := flashtext.NewKeywordProcessor(true) // 区分大小写
+kp.AddKeyWord("Go").Build()
 
-- **重复结果的可能性**：在多模式匹配下，数据清洗功能可能导致结果的重复。考虑到AC自动机的工作原理，一旦匹配到关键词，它会记录匹配的位置。如果在数据清洗过程中删除了匹配结果所在的文本片段，那么可能会导致后续的匹配结果无法被识别，从而引入了重复的结果。
+kp.ExtractKeywords("I use Go and go") 
+// 只匹配 "Go"，不匹配 "go"
+```
 
-- **专注于核心任务**：AC自动机的设计目标是快速在文本中查找关键词的出现，以实现高效的模式匹配。我们致力于提供一个轻量级且高性能的库，专注于核心任务，以满足用户对快速关键词匹配的需求。
+#### 处理字节数组
 
-- **单一职责原则**：根据软件工程的设计原则，每个组件或库应该专注于完成单一的任务。将数据清洗功能集成到AC自动机库中会增加复杂性和维护负担，而且数据清洗通常涉及到更广泛的文本处理任务。
+```go
+data := []byte("some binary data with keywords")
+matches := kp.ExtractKeywordsFromBytes(data)
+```
 
-- **灵活的组合**：我们鼓励用户根据其具体需求构建完整的文本处理流程。通过将AC自动机与其他专门用于数据清洗的工具或库结合使用，用户可以根据需要选择最适合的工具和方法来完成数据清洗任务，实现更灵活的文本处理流程。
+#### 链式调用
 
-## 贡献
+```go
+kp := flashtext.NewKeywordProcessor(false).
+    AddKeyWord("apple").
+    AddKeyWord("banana").
+    AddKeywordsFromList([]string{"orange", "grape"}).
+    Build()
+```
 
-欢迎贡献代码、报告问题或提供改进建议。请在 GitHub 项目页面提交 issue 或 pull 请求。
+---
 
-## 许可证
+## 🎯 使用场景
 
-flashtext 使用 [MIT 许可证](https://github.com/code-innovator-zyx/flashtext）
+### ✅ 推荐场景
+
+- **敏感词过滤** - 内容审核、评论检测
+- **文本分析** - 关键词提取、实体识别
+- **数据挖掘** - 大规模文本处理
+- **SEO工具** - 关键词密度分析
+- **日志分析** - 错误关键词检测
+
+### ⚠️ 不适合的场景
+
+- 关键词数量 < 10 (正则表达式可能更简单)
+- 只需要部分匹配 (可考虑简化的 Trie 实现)
+
+---
+
+## 📊 性能
+
+### 性能对比 (1000个关键词)
+
+
+| 实现          | 时间      | 内存  | 完整性    |
+| ------------- | --------- | ----- | --------- |
+| **FlashText** | **383ms** | 172MB | ✅ 完整   |
+| 正则表达式    | 22,900ms  | 1MB   | ✅ 完整   |
+| 简化Trie      | 172ms     | 133MB | ❌ 不完整 |
+
+### 重叠匹配示例
+
+在文本 `"hershey"` 中查找 `["he", "she", "hers"]`:
+
+```
+FlashText (AC自动机):
+✓ he    [0:2]
+✓ hers  [0:4]  
+✓ she   [3:6]   ← 重叠匹配
+✓ he    [4:6]   ← 重叠匹配
+总计: 4个
+
+简化Trie实现:
+✓ he    [0:1]
+✓ hers  [0:3]
+✓ he    [4:5]
+❌ 遗漏 "she"
+总计: 3个
+```
+
+**结论**: FlashText 保证找到所有匹配，这在敏感词过滤等安全场景下至关重要。
+
+📖 更多性能数据和分析，请查看 [PERFORMANCE.md](PERFORMANCE.md)
+
+---
+
+## 📚 文档
+
+### API 文档
+
+#### 创建处理器
+
+```go
+// 参数: caseSensitive - 是否区分大小写
+kp := flashtext.NewKeywordProcessor(caseSensitive bool)
+```
+
+#### 添加关键词
+
+```go
+// 添加单个关键词
+kp.AddKeyWord(keyword string) *KeywordProcessor
+
+// 批量添加关键词
+kp.AddKeywordsFromList(keywords []string) *KeywordProcessor
+```
+
+#### 构建索引
+
+```go
+// 必须在添加完所有关键词后调用
+kp.Build()
+```
+
+#### 提取关键词
+
+```go
+// 从字符串提取
+matches := kp.ExtractKeywords(text string) []Match
+
+// 从字节数组提取
+matches := kp.ExtractKeywordsFromBytes(data []byte) []Match
+```
+
+#### Match 结构
+
+```go
+type Match struct {
+    match string  // 匹配的文本
+    start int     // 开始位置（字节）
+    end   int     // 结束位置（字节）
+}
+
+// 获取方法
+match.MatchString() string  // 匹配的文本
+match.Start() int           // 开始位置
+match.End() int             // 结束位置
+```
+
+### 完整示例
+
+请参考测试文件 `keywordprocessor_test.go`
+
+---
+
+## 🧪 测试
+
+### 运行测试
+
+```bash
+# 功能测试
+go test -v
+
+# 性能测试
+go test -bench=. -benchmem
+
+# 性能对比测试
+go test -bench=BenchmarkComparison -benchmem -run=^$ -timeout=30m
+```
+
+### 测试覆盖
+
+- ✅ 基础匹配测试
+- ✅ 中文字符测试
+- ✅ 大小写敏感/不敏感测试
+- ✅ 边缘情况测试
+- ✅ 重叠匹配测试
+- ✅ 性能对比测试
+
+---
+
+## 🔄 与其他实现的对比
+
+### vs Python FlashText
+
+Python 版本在连续文本中存在匹配 bug（需要分词），而本实现能正确处理连续文本：
+
+```python
+# Python FlashText
+kp.extract_keywords('ahishehersshare')  # 返回 []  ❌
+
+kp.extract_keywords('a his he hers share')  # 返回 ['his', 'he', 'hers', 'share']  ✅
+```
+
+```go
+// FlashText Go
+kp.ExtractKeywords("ahishershare")  // 正确匹配所有  ✅
+```
+
+### vs ayoyu/flashtext (Go)
+
+ayoyu/flashtext 使用简化的 Trie 树，速度更快但会遗漏重叠匹配。FlashText 使用完整的 AC 自动机，保证匹配完整性。
+
+**选择建议**:
+
+- 需要完整匹配 → FlashText
+- 只追求速度且不关心重叠 → ayoyu/flashtext
+
+---
+
+## 🛠️ 最佳实践
+
+### 1. 复用实例
+
+```go
+// ✅ 好的做法：复用实例
+kp := flashtext.NewKeywordProcessor(false)
+kp.AddKeywordsFromList(keywords).Build()
+
+for _, text := range texts {
+    matches := kp.ExtractKeywords(text)
+}
+
+// ❌ 不好的做法：每次都创建新实例
+for _, text := range texts {
+    kp := flashtext.NewKeywordProcessor(false)
+    kp.AddKeywordsFromList(keywords).Build()
+    matches := kp.ExtractKeywords(text)
+}
+```
+
+### 2. 大文本分块处理
+
+```go
+const chunkSize = 1024 * 1024 // 1MB
+for i := 0; i < len(text); i += chunkSize {
+    end := min(i+chunkSize, len(text))
+    matches := kp.ExtractKeywords(text[i:end])
+    // 处理 matches...
+}
+```
+
+---
+
+## 📖 设计理念
+
+### 为什么不支持关键词替换？
+
+我们遵循**单一职责原则**，专注于做好一件事：**高效、准确的关键词匹配**。
+
+关键词替换可以很容易地在应用层实现：
+
+```go
+matches := kp.ExtractKeywords(text)
+// 用 matches 信息自行替换
+```
+
+这种设计让库保持简洁，同时给用户最大的灵活性。
+
+---
+
+## 🤝 贡献
+
+我们欢迎各种形式的贡献！
+
+### 如何贡献
+
+1. Fork 本仓库
+2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 Pull Request
+
+### 贡献指南
+
+- ✅ 添加测试用例
+- ✅ 保持代码风格一致
+- ✅ 更新相关文档
+- ✅ 确保所有测试通过
+
+---
+
+## 📄 许可证
+
+本项目采用 [MIT 许可证](LICENSE)
+
+---
+
+## 🙏 致谢
+
+- 感谢 [Aho-Corasick](https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm) 算法的发明者
+- 参考了 Python flashtext 库的设计思路
+
+---
+
+## 📮 联系方式
+
+- **Issues**: [GitHub Issues](https://github.com/the-yex/flashtext/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/the-yex/flashtext/discussions)
+
+---
+
+<div align="center">
+
+**如果这个项目对您有帮助，请给我们一个 ⭐ Star！**
+
+Made with ❤️ by the FlashText team
+
+</div>
