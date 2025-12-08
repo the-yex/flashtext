@@ -45,7 +45,7 @@ func (kp *KeywordProcessor) setItem(keyword string) {
 		node = node.children[char]
 	}
 	// 记录当前匹配词的长度
-	node.exist[len(keyword)] = struct{}{}
+	node.exist = append(node.exist, len([]rune(keyword)))
 }
 
 // Build constructs the failure pointers for the AC automaton.
@@ -70,8 +70,17 @@ func (kp *KeywordProcessor) Build() {
 			if faFail != nil {
 				childNode.failure = faFail.children[char]
 			}
-			for key := range childNode.failure.exist {
-				childNode.exist[key] = struct{}{}
+			// Merge exist and deduplicate
+			childNode.exist = append(childNode.exist, childNode.failure.exist...)
+			tmp := make(map[int]struct{}, len(childNode.exist))
+			for _, l := range childNode.exist {
+				tmp[l] = struct{}{}
+			}
+			if len(tmp) < len(childNode.exist) {
+				childNode.exist = childNode.exist[:0]
+				for l := range tmp {
+					childNode.exist = append(childNode.exist, l)
+				}
 			}
 		}
 	}
@@ -94,32 +103,23 @@ func (kp *KeywordProcessor) AddKeywordsFromList(keywords []string) *KeywordProce
 }
 
 // walk
-func (kp *KeywordProcessor) walk(sentence string, wf WalkFn) {
-	currentNode := kp.root
-	idx := 0
-	for len(sentence) > 0 {
-		r, size := utf8.DecodeRuneInString(sentence)
-		idx += size
-		sentence = sentence[size:]
+func (kp *KeywordProcessor) walk(sentence []rune, wf WalkFn) {
+	node := kp.root
 
+	for i, r := range sentence {
 		if !kp.caseSensitive {
 			r = unicode.ToLower(r)
 		}
-
-		// 失败指针回溯
-		for currentNode.children[r] == nil && currentNode.failure != nil {
-			currentNode = currentNode.failure
+		for node.children[r] == nil && node != kp.root {
+			node = node.failure
 		}
 
-		if currentNode.children[r] == nil {
-			continue
+		if node.children[r] != nil {
+			node = node.children[r]
 		}
 
-		currentNode = currentNode.children[r]
-
-		// 输出所有匹配
-		for length := range currentNode.exist {
-			if !wf(idx-length, idx) {
+		for _, l := range node.exist {
+			if !wf(i+1-l, i+1) {
 				return
 			}
 		}
@@ -130,16 +130,22 @@ func (kp *KeywordProcessor) walk(sentence string, wf WalkFn) {
 // It returns a slice of all matches found.
 func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 	// 优化: 预分配容量
-	matches := make([]Match, 0, 16)
-	if len(sentence) == 0 {
-		return matches
+	runes := []rune(sentence)
+	if len(runes) == 0 {
+		return nil
 	}
-
-	kp.walk(sentence, func(start, end int) bool {
+	matches := make([]Match, 0, len(runes)/4)
+	byteOffsets := make([]int, len(runes)+1)
+	for i, r := range runes {
+		byteOffsets[i+1] = byteOffsets[i] + utf8.RuneLen(r)
+	}
+	kp.walk(runes, func(start, end int) bool {
+		startByte := byteOffsets[start]
+		endByte := byteOffsets[end]
 		matches = append(matches, Match{
-			start: start,
-			end:   end,
-			match: sentence[start:end],
+			start: startByte,
+			end:   endByte,
+			match: sentence[startByte:endByte],
 		})
 		return true
 	})
@@ -150,19 +156,5 @@ func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 // It returns a slice of all matches found.
 func (kp *KeywordProcessor) ExtractKeywordsFromBytes(sentence []byte) []Match {
 	// 优化: 预分配容量 + 统一使用 walk
-	matches := make([]Match, 0, 16)
-	if len(sentence) == 0 {
-		return matches
-	}
-
-	str := string(sentence)
-	kp.walk(str, func(start, end int) bool {
-		matches = append(matches, Match{
-			start: start,
-			end:   end,
-			match: str[start:end],
-		})
-		return true
-	})
-	return matches
+	return kp.ExtractKeywords(string(sentence))
 }
