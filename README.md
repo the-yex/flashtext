@@ -434,6 +434,6 @@ matches := kp.ExtractKeywords(text)
 
 **如果这个项目对您有帮助，请给我们一个 ⭐ Star！**
 
-Made with ❤️ by the FlashText team
+Made with ❤️ by the-yex
 
 </div>
