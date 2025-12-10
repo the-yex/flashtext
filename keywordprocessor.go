@@ -154,14 +154,7 @@ func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 	}
 	density := kp.stats.getDensity()
 	capEstimate := int(float64(len(runes)) * density)
-	if capEstimate < 16 {
-		capEstimate = 16
-	}
-	if capEstimate > 4096 {
-		capEstimate = 4096
-	}
-	//fmt.Println(capEstimate)
-	matches := make([]Match, 0, capEstimate)
+	matches := make([]Match, 0, capEstimate+1)
 	byteOffsets := make([]int, len(runes)+1)
 	for i, r := range runes {
 		byteOffsets[i+1] = byteOffsets[i] + utf8.RuneLen(r)
