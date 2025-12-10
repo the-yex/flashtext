@@ -1,10 +1,11 @@
-package flashtext
+package benchmark_test
 
 import (
 	"fmt"
 	"testing"
 
 	ayoyu "github.com/ayoyu/flashtext"
+	"github.com/the-yex/flashtext"
 )
 
 // 验证ayoyu是否会漏掉重叠匹配
@@ -14,7 +15,7 @@ func TestAyoyuOverlapMatching(t *testing.T) {
 	text := "hershey"
 
 	// 本库测试
-	kp := NewKeywordProcessor()
+	kp := flashtext.NewKeywordProcessor()
 	kp.AddKeywordsFromList(keywords).Build()
 	ourMatches := kp.ExtractKeywords(text)
 

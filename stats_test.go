@@ -7,8 +7,6 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestStats_Init(t *testing.T) {
@@ -16,17 +14,25 @@ func TestStats_Init(t *testing.T) {
 	s := newStats(ctx, 0.2, 512)
 	defer s.close()
 
-	assert.NotNil(t, s)
-	assert.Equal(t, 0.2, s.alpha)
-	assert.Equal(t, 0.01, s.getDensity())
+	if s == nil {
+		t.Fatal("stats should not be nil")
+	}
+	if s.alpha != 0.2 {
+		t.Errorf("expected alpha 0.2, got %v", s.alpha)
+	}
+	if density := s.getDensity(); density != 0.01 {
+		t.Errorf("expected density 0.01, got %v", density)
+	}
 }
 
 func TestStats_Integration_With_Processor(t *testing.T) {
 	kp := NewKeywordProcessor()
 	defer kp.Close()
 
-	// 1. Initial density should be 0
-	assert.Equal(t, 0.01, kp.stats.getDensity())
+	// 1. Initial density should be 0.01
+	if density := kp.stats.getDensity(); density != 0.01 {
+		t.Errorf("expected initial density 0.01, got %v", density)
+	}
 
 	// 2. Add keywords and process text
 	kp.AddKeyWord("apple")
@@ -36,7 +42,9 @@ func TestStats_Integration_With_Processor(t *testing.T) {
 	// Text with 50% density (10 chars total, "apple" is 5 chars)
 	text := "apple....." // "apple" (5) + "....." (5) = 10 chars
 	matches := kp.ExtractKeywords(text)
-	assert.Equal(t, 1, len(matches))
+	if len(matches) != 1 {
+		t.Errorf("expected 1 match, got %d", len(matches))
+	}
 
 	// Allow time for async update
 	time.Sleep(50 * time.Millisecond)
@@ -45,8 +53,12 @@ func TestStats_Integration_With_Processor(t *testing.T) {
 	// New density = 1 match / 10 runes = 0.1
 	// EWMA = 0.2 * 0.1 + 0.8 * 0.0 = 0.02
 	currentDensity := kp.stats.getDensity()
-	assert.Less(t, currentDensity, 0.1)
-	assert.InDelta(t, 0.02, currentDensity, 0.01)
+	if currentDensity >= 0.1 {
+		t.Errorf("expected density < 0.1, got %v", currentDensity)
+	}
+	if math.Abs(currentDensity-0.02) > 0.01 {
+		t.Errorf("expected density ~0.02, got %v", currentDensity)
+	}
 }
 
 func TestStats_EWMA_Logic(t *testing.T) {
@@ -59,13 +71,17 @@ func TestStats_EWMA_Logic(t *testing.T) {
 	// EWMA = 0.5 * 0.1 + 0.5 * 0.0 = 0.05
 	s.add(10, 100)
 	time.Sleep(50 * time.Millisecond)
-	assert.InDelta(t, 0.05, s.getDensity(), 0.01)
+	if density := s.getDensity(); math.Abs(density-0.05) > 0.01 {
+		t.Errorf("expected density ~0.05, got %v", density)
+	}
 
 	// Update 2: matches=20, runes=100 -> density=0.2
 	// EWMA = 0.5 * 0.2 + 0.5 * 0.05 = 0.1 + 0.025 = 0.125
 	s.add(20, 100)
 	time.Sleep(50 * time.Millisecond)
-	assert.InDelta(t, 0.125, s.getDensity(), 0.13)
+	if density := s.getDensity(); math.Abs(density-0.125) > 0.01 {
+		t.Errorf("expected density ~0.125, got %v", density)
+	}
 }
 
 func TestStats_Concurrency(t *testing.T) {
@@ -89,7 +105,9 @@ func TestStats_Concurrency(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Simply verify it didn't panic and density increased
-	assert.Greater(t, s.getDensity(), 0.0)
+	if density := s.getDensity(); density <= 0.0 {
+		t.Errorf("expected density > 0.0, got %v", density)
+	}
 }
 
 func TestStats_ZeroRunes(t *testing.T) {
@@ -101,14 +119,18 @@ func TestStats_ZeroRunes(t *testing.T) {
 	initialDensity := s.getDensity()
 	s.add(1, 0)
 	time.Sleep(20 * time.Millisecond)
-	assert.Equal(t, initialDensity, s.getDensity())
+	if density := s.getDensity(); density != initialDensity {
+		t.Errorf("expected density to remain %v, got %v", initialDensity, density)
+	}
 }
 
 func TestFloat64BitsConversion(t *testing.T) {
 	val := 0.123456
 	bits := float64ToBits(val)
 	val2 := float64FromBits(bits)
-	assert.Equal(t, val, val2)
+	if val != val2 {
+		t.Errorf("expected %v, got %v", val, val2)
+	}
 }
 
 func TestAtomicLogicProtection(t *testing.T) {
@@ -122,10 +144,14 @@ func TestAtomicLogicProtection(t *testing.T) {
 	var atomicItem uint64
 	// Simulate CAS
 	swapped := atomic.CompareAndSwapUint64(&atomicItem, 0, testBits)
-	assert.True(t, swapped)
+	if !swapped {
+		t.Fatal("expected swap to succeed")
+	}
 
 	loadedBits := atomic.LoadUint64(&atomicItem)
 	loadedVal := math.Float64frombits(loadedBits)
 
-	assert.Equal(t, testVal, loadedVal)
+	if loadedVal != testVal {
+		t.Errorf("expected %v, got %v", testVal, loadedVal)
+	}
 }

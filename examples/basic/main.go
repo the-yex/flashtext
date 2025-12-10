@@ -10,7 +10,7 @@ func main() {
 	// 1. 初始化处理器 (true表示区分大小写)
 	// Initialize processor (true for case sensitive)
 	kp := flashtext.NewKeywordProcessor(flashtext.WithCaseSensitive())
-
+	defer kp.Close()
 	// 2. 添加关键词
 	// Add keywords
 	kp.AddKeyWord("Go")

@@ -14,7 +14,7 @@ func main() {
 
 	fmt.Println("=== 1. Overlapping Matches / 重叠匹配 ===")
 	kp := flashtext.NewKeywordProcessor()
-	
+	defer kp.Close()
 	// 添加一组包含包含关系的关键词
 	keywords := []string{"sys", "system", "tem", "operating system"}
 	kp.AddKeywordsFromList(keywords).Build()
@@ -22,7 +22,7 @@ func main() {
 	text := "The operating system is complex."
 	fmt.Println("Keywords:", keywords)
 	fmt.Println("Text:", text)
-	
+
 	matches := kp.ExtractKeywords(text)
 	for _, m := range matches {
 		fmt.Printf("Found: %s \t[%d:%d]\n", m.MatchString(), m.Start(), m.End())
@@ -38,11 +38,10 @@ func main() {
 	defer os.Remove(filename)
 
 	fileData, _ := ioutil.ReadFile(filename)
-	
+
 	kp2 := flashtext.NewKeywordProcessor()
 	kp2.AddKeywordsFromList([]string{"hello", "file", "test"}).Build()
-	
-	// 直接处理 []byte，避免转换string的开销
+
 	byteMatches := kp2.ExtractKeywordsFromBytes(fileData)
 	for _, m := range byteMatches {
 		fmt.Printf("Found in bytes: %s\n", m.MatchString())

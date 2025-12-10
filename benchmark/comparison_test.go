@@ -1,4 +1,4 @@
-package flashtext
+package benchmark_test
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	ayoyu "github.com/ayoyu/flashtext"
+	"github.com/the-yex/flashtext"
 )
 
 // 加载测试数据
@@ -59,7 +60,7 @@ func BenchmarkComparison_ThisLibrary(b *testing.B) {
 		words = words[:10000]
 	}
 
-	kp := NewKeywordProcessor()
+	kp := flashtext.NewKeywordProcessor()
 	kp.AddKeywordsFromList(words).Build()
 
 	b.ReportAllocs()
@@ -147,7 +148,7 @@ func BenchmarkSmallScale_ThisLibrary(b *testing.B) {
 		words = words[:100]
 	}
 
-	kp := NewKeywordProcessor()
+	kp := flashtext.NewKeywordProcessor()
 	kp.AddKeywordsFromList(words).Build()
 
 	b.ReportAllocs()
@@ -231,7 +232,7 @@ func BenchmarkMediumScale_ThisLibrary(b *testing.B) {
 		words = words[:1000]
 	}
 
-	kp := NewKeywordProcessor()
+	kp := flashtext.NewKeywordProcessor()
 	kp.AddKeywordsFromList(words).Build()
 
 	b.ReportAllocs()
