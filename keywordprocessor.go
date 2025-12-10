@@ -2,6 +2,7 @@ package flashtext
 
 import (
 	"context"
+	"math"
 	"unicode"
 	"unicode/utf8"
 )
@@ -153,8 +154,8 @@ func (kp *KeywordProcessor) ExtractKeywords(sentence string) []Match {
 		return nil
 	}
 	density := kp.stats.getDensity()
-	capEstimate := int(float64(len(runes)) * density)
-	matches := make([]Match, 0, capEstimate+1)
+	capEstimate := int(math.Ceil(float64(len(runes)) * density))
+	matches := make([]Match, 0, capEstimate)
 	byteOffsets := make([]int, len(runes)+1)
 	for i, r := range runes {
 		byteOffsets[i+1] = byteOffsets[i] + utf8.RuneLen(r)
