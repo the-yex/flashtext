@@ -3,7 +3,7 @@
 <div align="center">
 
 **高性能的 Go 语言 AC 自动机实现**
-
+（别问我为什么用中文，因为我是中国人）
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.20-blue)](https://golang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](.)
