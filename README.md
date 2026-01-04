@@ -78,11 +78,11 @@ import (
 
 func main() {
     // 1. 创建处理器（不区分大小写）
-    kp := flashtext.NewKeywordProcessor(false)
+	kp := flashtext.NewKeywordProcessor()
   
     // 2. 添加关键词并构建
     kp.AddKeywordsFromList([]string{"golang", "python", "java"}).Build()
-  
+    defer kp.Close()
     // 3. 提取关键词
     text := "I love Golang and Python programming!"
     matches := kp.ExtractKeywords(text)
@@ -107,9 +107,9 @@ func main() {
 #### 大小写敏感匹配
 
 ```go
-kp := flashtext.NewKeywordProcessor(true) // 区分大小写
+kp := flashtext.NewKeywordProcessor(flashtext.WithCaseSensitive()) // 区分大小写
 kp.AddKeyWord("Go").Build()
-
+defer kp.Close()
 kp.ExtractKeywords("I use Go and go") 
 // 只匹配 "Go"，不匹配 "go"
 ```
@@ -124,7 +124,7 @@ matches := kp.ExtractKeywordsFromBytes(data)
 #### 链式调用
 
 ```go
-kp := flashtext.NewKeywordProcessor(false).
+kp := flashtext.NewKeywordProcessor().
     AddKeyWord("apple").
     AddKeyWord("banana").
     AddKeywordsFromList([]string{"orange", "grape"}).
